@@ -32,11 +32,11 @@ async function extractTextFromPdfBuffer(buffer) {
 }
 
 /**
- * @description Controller to generate interview report based on user self description, resume and job description.
+ * @description Controller to generate interview report based on required resume PDF, job description, and self description.
  */
 async function generateInterViewReportController(req, res) {
   try {
-    const { selfDescription = "", jobDescription } = req.body;
+    const { selfDescription, jobDescription } = req.body;
 
     if (!req.file) {
       return res.status(400).json({
@@ -56,6 +56,12 @@ async function generateInterViewReportController(req, res) {
       });
     }
 
+    if (!selfDescription || !selfDescription.trim()) {
+      return res.status(400).json({
+        message: "Self description is required.",
+      });
+    }
+
     const resumeText = await extractTextFromPdfBuffer(req.file.buffer);
 
     if (!resumeText.trim()) {
@@ -67,15 +73,15 @@ async function generateInterViewReportController(req, res) {
 
     const interViewReportByAi = await generateInterviewReport({
       resume: resumeText,
-      selfDescription,
-      jobDescription,
+      selfDescription: selfDescription.trim(),
+      jobDescription: jobDescription.trim(),
     });
 
     const interviewReport = await interviewReportModel.create({
       user: req.user.id,
       resume: resumeText,
-      selfDescription,
-      jobDescription,
+      selfDescription: selfDescription.trim(),
+      jobDescription: jobDescription.trim(),
       ...interViewReportByAi,
     });
 
