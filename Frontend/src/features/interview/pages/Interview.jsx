@@ -1,67 +1,11 @@
 import React, { useState, useEffect } from "react";
-import "../style/interview.scss";
 import { useInterview } from "../hooks/useInterview.js";
 import { useNavigate, useParams } from "react-router";
 
 const NAV_ITEMS = [
-  {
-    id: "technical",
-    label: "Technical Questions",
-    icon: (
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        width="16"
-        height="16"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      >
-        <polyline points="16 18 22 12 16 6" />
-        <polyline points="8 6 2 12 8 18" />
-      </svg>
-    ),
-  },
-  {
-    id: "behavioral",
-    label: "Behavioral Questions",
-    icon: (
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        width="16"
-        height="16"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      >
-        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-      </svg>
-    ),
-  },
-  {
-    id: "roadmap",
-    label: "Road Map",
-    icon: (
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        width="16"
-        height="16"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      >
-        <polygon points="3 11 22 2 13 21 11 13 3 11" />
-      </svg>
-    ),
-  },
+  { id: "technical", label: "Technical Questions" },
+  { id: "behavioral", label: "Behavioral Questions" },
+  { id: "roadmap", label: "Preparation Road Map" },
 ];
 
 const getMatchVerdict = (score) => {
@@ -71,45 +15,58 @@ const getMatchVerdict = (score) => {
   return "Low match — significant skill gaps identified";
 };
 
-// ── Sub-components ────────────────────────────────────────────────────────────
-const QuestionCard = ({ item, index }) => {
-  const [open, setOpen] = useState(false);
+const getSeverityBadge = (severity) => {
+  if (severity === "high")
+    return "border-rose-500/30 bg-rose-500/10 text-rose-400";
+  if (severity === "medium")
+    return "border-amber-500/30 bg-amber-500/10 text-amber-400";
+  return "border-zinc-700 bg-zinc-800/80 text-zinc-300";
+};
+
+// ── Question Accordion Card ───────────────────────────────────────────────────
+const QuestionCard = ({ item, index, forceOpen }) => {
+  const [open, setOpen] = useState(index === 0);
+
+  useEffect(() => {
+    if (forceOpen !== null) {
+      setOpen(forceOpen);
+    }
+  }, [forceOpen]);
+
   return (
-    <div className="q-card">
-      <div className="q-card__header" onClick={() => setOpen((o) => !o)}>
-        <span className="q-card__index">Q{index + 1}</span>
-        <p className="q-card__question">{item.question}</p>
-        <span
-          className={`q-card__chevron ${open ? "q-card__chevron--open" : ""}`}
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="16"
-            height="16"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <polyline points="6 9 12 15 18 9" />
-          </svg>
+    <div className="overflow-hidden rounded-xl border border-zinc-800 bg-zinc-900/70">
+      <button
+        type="button"
+        onClick={() => setOpen((prev) => !prev)}
+        className="flex w-full items-start justify-between gap-3 p-4 text-left transition hover:bg-zinc-900 cursor-pointer"
+      >
+        <div className="flex items-start gap-3">
+          <span className="mt-0.5 shrink-0 rounded border border-emerald-500/30 bg-emerald-500/10 px-2 py-0.5 font-mono text-xs font-semibold text-emerald-400">
+            Q{index + 1}
+          </span>
+          <p className="text-sm font-medium leading-relaxed text-zinc-100">
+            {item.question}
+          </p>
+        </div>
+        <span className="mt-0.5 shrink-0 text-xs text-zinc-400">
+          {open ? "▲" : "▼"}
         </span>
-      </div>
+      </button>
+
       {open && (
-        <div className="q-card__body">
-          <div className="q-card__section">
-            <span className="q-card__tag q-card__tag--intention">
-              Intention
+        <div className="space-y-3 border-t border-zinc-800/80 bg-zinc-950/60 p-4 text-sm leading-relaxed">
+          <div className="rounded-lg border-l-2 border-amber-500/70 bg-zinc-900/60 p-3">
+            <span className="mb-1 block font-mono text-[11px] font-semibold uppercase tracking-wider text-amber-400">
+              Interviewer Intention
             </span>
-            <p>{item.intention}</p>
+            <p className="text-zinc-300">{item.intention}</p>
           </div>
-          <div className="q-card__section">
-            <span className="q-card__tag q-card__tag--answer">
+
+          <div className="rounded-lg border-l-2 border-emerald-500/70 bg-zinc-900/60 p-3">
+            <span className="mb-1 block font-mono text-[11px] font-semibold uppercase tracking-wider text-emerald-400">
               Model Answer
             </span>
-            <p>{item.answer}</p>
+            <p className="whitespace-pre-line text-zinc-200">{item.answer}</p>
           </div>
         </div>
       )}
@@ -117,26 +74,13 @@ const QuestionCard = ({ item, index }) => {
   );
 };
 
-const RoadMapDay = ({ day }) => (
-  <div className="roadmap-day">
-    <div className="roadmap-day__header">
-      <span className="roadmap-day__badge">Day {day.day}</span>
-      <h3 className="roadmap-day__focus">{day.focus}</h3>
-    </div>
-    <ul className="roadmap-day__tasks">
-      {(day.tasks || []).map((task, i) => (
-        <li key={i}>
-          <span className="roadmap-day__bullet" />
-          {task}
-        </li>
-      ))}
-    </ul>
-  </div>
-);
-
 // ── Main Component ────────────────────────────────────────────────────────────
 const Interview = () => {
   const [activeNav, setActiveNav] = useState("technical");
+  const [expandAll, setExpandAll] = useState(null);
+  const [downloadingPdf, setDownloadingPdf] = useState(false);
+  const [completedTasks, setCompletedTasks] = useState({});
+
   const { report, getReportById, loading, error, getResumePdf } =
     useInterview();
   const { interviewId } = useParams();
@@ -145,25 +89,50 @@ const Interview = () => {
   useEffect(() => {
     if (interviewId) {
       getReportById(interviewId);
+      setExpandAll(null);
+      setCompletedTasks({});
     }
   }, [interviewId]);
 
-  if (loading) {
+  const handleDownloadResume = async () => {
+    if (downloadingPdf) return;
+    setDownloadingPdf(true);
+    try {
+      await getResumePdf(interviewId);
+    } finally {
+      setDownloadingPdf(false);
+    }
+  };
+
+  const toggleTask = (taskKey) => {
+    setCompletedTasks((prev) => ({
+      ...prev,
+      [taskKey]: !prev[taskKey],
+    }));
+  };
+
+  // Show full-page loading only during initial report fetch (not PDF export)
+  if (loading && !report) {
     return (
-      <main className="loading-screen">
-        <h1>Loading your interview plan...</h1>
+      <main className="flex min-h-[calc(100vh-60px)] items-center justify-center px-4">
+        <div className="flex items-center gap-3 rounded-xl border border-zinc-800 bg-zinc-900 px-5 py-3.5 text-sm text-zinc-300">
+          <span className="h-4 w-4 animate-spin rounded-full border-2 border-zinc-700 border-t-emerald-400" />
+          <span>Loading your interview report...</span>
+        </div>
       </main>
     );
   }
 
   if (!report) {
     return (
-      <main className="loading-screen">
-        <h1>{error || "Interview report not found."}</h1>
+      <main className="flex min-h-[calc(100vh-60px)] flex-col items-center justify-center px-4 text-center">
+        <p className="text-base font-medium text-zinc-200">
+          {error || "Interview report not found."}
+        </p>
         <button
+          type="button"
           onClick={() => navigate("/")}
-          className="button primary-button"
-          style={{ marginTop: "1rem" }}
+          className="mt-4 rounded-lg bg-zinc-50 px-4 py-2 text-sm font-semibold text-zinc-950 hover:bg-zinc-200 cursor-pointer"
         >
           Back to Home
         </button>
@@ -171,106 +140,144 @@ const Interview = () => {
     );
   }
 
-  const scoreColor =
-    report.matchScore >= 80
-      ? "score--high"
-      : report.matchScore >= 60
-        ? "score--mid"
-        : "score--low";
-
   const technicalQuestions = report.technicalQuestions || [];
   const behavioralQuestions = report.behavioralQuestions || [];
   const preparationPlan = report.preparationPlan || [];
   const skillGaps = report.skillGaps || [];
 
+  // Calculate roadmap completion percentage
+  const totalTasks = preparationPlan.reduce(
+    (sum, day) => sum + (day.tasks ? day.tasks.length : 0),
+    0,
+  );
+  const doneTasksCount = Object.values(completedTasks).filter(Boolean).length;
+  const progressPercent =
+    totalTasks > 0 ? Math.round((doneTasksCount / totalTasks) * 100) : 0;
+
+  const scoreRingStyle =
+    report.matchScore >= 80
+      ? "border-emerald-500 text-emerald-400"
+      : report.matchScore >= 60
+        ? "border-amber-500 text-amber-400"
+        : "border-rose-500 text-rose-400";
+
   return (
-    <div className="interview-page">
-      <div className="interview-layout">
-        {/* ── Left Nav ── */}
-        <nav className="interview-nav">
-          <div className="nav-content">
-            <p className="interview-nav__label">Sections</p>
-            {NAV_ITEMS.map((item) => (
-              <button
-                key={item.id}
-                className={`interview-nav__item ${activeNav === item.id ? "interview-nav__item--active" : ""}`}
-                onClick={() => setActiveNav(item.id)}
-              >
-                <span className="interview-nav__icon">{item.icon}</span>
-                {item.label}
-              </button>
-            ))}
-          </div>
+    <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
+      {/* Report Title Header */}
+      <header className="mb-6 flex flex-col justify-between gap-4 rounded-xl border border-zinc-800 bg-zinc-900/70 p-5 sm:flex-row sm:items-center">
+        <div>
+          <span className="font-mono text-xs font-medium uppercase tracking-wider text-emerald-400">
+            Interview Diagnostic Report
+          </span>
+          <h1 className="mt-1 text-xl font-bold text-zinc-50 sm:text-2xl">
+            {report.title || "Target Role Interview Plan"}
+          </h1>
+          {report.createdAt && (
+            <p className="mt-1 text-xs text-zinc-500">
+              Generated on {new Date(report.createdAt).toLocaleDateString()}
+            </p>
+          )}
+        </div>
 
-          <div>
-            <button
-              onClick={() => {
-                getResumePdf(interviewId);
-              }}
-              className="button primary-button"
-            >
-              <svg
-                height={"0.8rem"}
-                style={{ marginRight: "0.8rem" }}
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 24 24"
-                fill="currentColor"
-              >
-                <path d="M10.6144 17.7956 11.492 15.7854C12.2731 13.9966 13.6789 12.5726 15.4325 11.7942L17.8482 10.7219C18.6162 10.381 18.6162 9.26368 17.8482 8.92277L15.5079 7.88394C13.7092 7.08552 12.2782 5.60881 11.5105 3.75894L10.6215 1.61673C10.2916.821765 9.19319.821767 8.8633 1.61673L7.97427 3.75892C7.20657 5.60881 5.77553 7.08552 3.97685 7.88394L1.63658 8.92277C.868537 9.26368.868536 10.381 1.63658 10.7219L4.0523 11.7942C5.80589 12.5726 7.21171 13.9966 7.99275 15.7854L8.8704 17.7956C9.20776 18.5682 10.277 18.5682 10.6144 17.7956ZM19.4014 22.6899 19.6482 22.1242C20.0882 21.1156 20.8807 20.3125 21.8695 19.8732L22.6299 19.5353C23.0412 19.3526 23.0412 18.7549 22.6299 18.5722L21.9121 18.2532C20.8978 17.8026 20.0911 16.9698 19.6586 15.9269L19.4052 15.3156C19.2285 14.8896 18.6395 14.8896 18.4628 15.3156L18.2094 15.9269C17.777 16.9698 16.9703 17.8026 15.956 18.2532L15.2381 18.5722C14.8269 18.7549 14.8269 19.3526 15.2381 19.5353L15.9985 19.8732C16.9874 20.3125 17.7798 21.1156 18.2198 22.1242L18.4667 22.6899C18.6473 23.104 19.2207 23.104 19.4014 22.6899Z"></path>
-              </svg>
-              Download Resume
-            </button>
-
-            {error && (
-              <p
-                role="alert"
-                style={{
-                  marginTop: "0.75rem",
-                  color: "#fca5a5",
-                  backgroundColor: "rgba(239, 68, 68, 0.12)",
-                  border: "1px solid rgba(239, 68, 68, 0.45)",
-                  borderRadius: "6px",
-                  padding: "0.5rem 0.65rem",
-                  fontSize: "0.8rem",
-                }}
-              >
-                {error}
-              </p>
+        <div className="flex flex-col items-start gap-2 sm:items-end">
+          <button
+            type="button"
+            onClick={handleDownloadResume}
+            disabled={downloadingPdf}
+            className="inline-flex items-center gap-2 rounded-lg bg-zinc-50 px-4 py-2.5 text-sm font-semibold text-zinc-950 transition hover:bg-zinc-200 disabled:cursor-not-allowed disabled:opacity-60 cursor-pointer"
+          >
+            {downloadingPdf && (
+              <span className="h-4 w-4 animate-spin rounded-full border-2 border-zinc-400 border-t-zinc-950" />
             )}
+            <span>
+              {downloadingPdf
+                ? "Generating PDF..."
+                : "Download Tailored Resume"}
+            </span>
+          </button>
+
+          {error && (
+            <p role="alert" className="text-xs text-rose-400">
+              {error}
+            </p>
+          )}
+        </div>
+      </header>
+
+      {/* 3-Column Workspace */}
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
+        {/* Left Section Navigation (3 cols) */}
+        <nav className="lg:col-span-3">
+          <div className="rounded-xl border border-zinc-800 bg-zinc-900/70 p-3">
+            <p className="mb-2 px-2.5 font-mono text-[11px] font-semibold uppercase tracking-wider text-zinc-500">
+              Sections
+            </p>
+            <div className="space-y-1">
+              {NAV_ITEMS.map((item) => {
+                const count =
+                  item.id === "technical"
+                    ? technicalQuestions.length
+                    : item.id === "behavioral"
+                      ? behavioralQuestions.length
+                      : `${preparationPlan.length}d`;
+
+                return (
+                  <button
+                    key={item.id}
+                    type="button"
+                    onClick={() => {
+                      setActiveNav(item.id);
+                      setExpandAll(null);
+                    }}
+                    className={`flex w-full items-center justify-between rounded-lg px-3 py-2.5 text-left text-sm font-medium transition cursor-pointer ${
+                      activeNav === item.id
+                        ? "bg-zinc-800 text-zinc-50"
+                        : "text-zinc-400 hover:bg-zinc-800/50 hover:text-zinc-200"
+                    }`}
+                  >
+                    <span>{item.label}</span>
+                    <span className="rounded bg-zinc-950 px-2 py-0.5 font-mono text-xs text-zinc-400">
+                      {count}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
           </div>
         </nav>
 
-        <div className="interview-divider" />
-
-        {/* ── Center Content ── */}
-        <main className="interview-content">
-          {activeNav === "technical" && (
+        {/* Center Main Content (6 cols) */}
+        <main className="lg:col-span-6">
+          {(activeNav === "technical" || activeNav === "behavioral") && (
             <section>
-              <div className="content-header">
-                <h2>Technical Questions</h2>
-                <span className="content-header__count">
-                  {technicalQuestions.length} questions
-                </span>
+              <div className="mb-4 flex items-center justify-between">
+                <h2 className="text-lg font-semibold text-zinc-100">
+                  {activeNav === "technical"
+                    ? "Technical Questions"
+                    : "Behavioral Questions"}
+                </h2>
+                <button
+                  type="button"
+                  onClick={() =>
+                    setExpandAll((prev) => (prev === true ? false : true))
+                  }
+                  className="rounded-lg border border-zinc-800 bg-zinc-900 px-3 py-1.5 text-xs font-medium text-zinc-300 transition hover:border-zinc-700 hover:text-white cursor-pointer"
+                >
+                  {expandAll === true ? "Collapse All" : "Expand All"}
+                </button>
               </div>
-              <div className="q-list">
-                {technicalQuestions.map((q, i) => (
-                  <QuestionCard key={i} item={q} index={i} />
-                ))}
-              </div>
-            </section>
-          )}
 
-          {activeNav === "behavioral" && (
-            <section>
-              <div className="content-header">
-                <h2>Behavioral Questions</h2>
-                <span className="content-header__count">
-                  {behavioralQuestions.length} questions
-                </span>
-              </div>
-              <div className="q-list">
-                {behavioralQuestions.map((q, i) => (
-                  <QuestionCard key={i} item={q} index={i} />
+              <div className="space-y-3">
+                {(activeNav === "technical"
+                  ? technicalQuestions
+                  : behavioralQuestions
+                ).map((q, i) => (
+                  <QuestionCard
+                    key={`${activeNav}-${i}`}
+                    item={q}
+                    index={i}
+                    forceOpen={expandAll}
+                  />
                 ))}
               </div>
             </section>
@@ -278,47 +285,102 @@ const Interview = () => {
 
           {activeNav === "roadmap" && (
             <section>
-              <div className="content-header">
-                <h2>Preparation Road Map</h2>
-                <span className="content-header__count">
-                  {preparationPlan.length}-day plan
+              <div className="mb-4 flex items-center justify-between">
+                <h2 className="text-lg font-semibold text-zinc-100">
+                  Preparation Road Map
+                </h2>
+                <span className="font-mono text-xs text-zinc-400">
+                  {doneTasksCount} / {totalTasks} tasks ({progressPercent}%)
                 </span>
               </div>
-              <div className="roadmap-list">
+
+              {/* Completion Progress Bar */}
+              <div className="mb-5 h-2 w-full overflow-hidden rounded-full bg-zinc-800">
+                <div
+                  className="h-full bg-emerald-500 transition-all duration-200"
+                  style={{ width: `${progressPercent}%` }}
+                />
+              </div>
+
+              <div className="space-y-4">
                 {preparationPlan.map((day) => (
-                  <RoadMapDay key={day.day} day={day} />
+                  <div
+                    key={day.day}
+                    className="rounded-xl border border-zinc-800 bg-zinc-900/70 p-4"
+                  >
+                    <div className="mb-3 flex items-center gap-2.5">
+                      <span className="rounded border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-0.5 font-mono text-xs font-semibold text-emerald-400">
+                        Day {day.day}
+                      </span>
+                      <h3 className="text-sm font-semibold text-zinc-100">
+                        {day.focus}
+                      </h3>
+                    </div>
+
+                    <ul className="space-y-2">
+                      {(day.tasks || []).map((task, i) => {
+                        const taskKey = `${day.day}-${i}`;
+                        const isChecked = !!completedTasks[taskKey];
+
+                        return (
+                          <li key={i}>
+                            <label className="flex cursor-pointer items-start gap-2.5 rounded-lg p-1.5 text-sm transition hover:bg-zinc-950/60">
+                              <input
+                                type="checkbox"
+                                checked={isChecked}
+                                onChange={() => toggleTask(taskKey)}
+                                className="mt-1 h-4 w-4 rounded border-zinc-700 bg-zinc-950 accent-emerald-500 cursor-pointer"
+                              />
+                              <span
+                                className={
+                                  isChecked
+                                    ? "text-zinc-500 line-through"
+                                    : "text-zinc-300"
+                                }
+                              >
+                                {task}
+                              </span>
+                            </label>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  </div>
                 ))}
               </div>
             </section>
           )}
         </main>
 
-        <div className="interview-divider" />
-
-        {/* ── Right Sidebar ── */}
-        <aside className="interview-sidebar">
-          {/* Match Score */}
-          <div className="match-score">
-            <p className="match-score__label">Match Score</p>
-            <div className={`match-score__ring ${scoreColor}`}>
-              <span className="match-score__value">{report.matchScore}</span>
-              <span className="match-score__pct">%</span>
+        {/* Right Diagnostic Sidebar (3 cols) */}
+        <aside className="space-y-4 lg:col-span-3">
+          {/* Match Score Card */}
+          <div className="rounded-xl border border-zinc-800 bg-zinc-900/70 p-5 text-center">
+            <p className="font-mono text-xs font-semibold uppercase tracking-wider text-zinc-400">
+              Match Score
+            </p>
+            <div
+              className={`mx-auto my-4 flex h-24 w-24 items-center justify-center rounded-full border-4 bg-zinc-950 ${scoreRingStyle}`}
+            >
+              <span className="font-mono text-2xl font-bold">
+                {report.matchScore}%
+              </span>
             </div>
-            <p className="match-score__sub">
+            <p className="text-xs leading-relaxed text-zinc-300">
               {getMatchVerdict(report.matchScore)}
             </p>
           </div>
 
-          <div className="sidebar-divider" />
-
-          {/* Skill Gaps */}
-          <div className="skill-gaps">
-            <p className="skill-gaps__label">Skill Gaps</p>
-            <div className="skill-gaps__list">
+          {/* Skill Gaps Card */}
+          <div className="rounded-xl border border-zinc-800 bg-zinc-900/70 p-5">
+            <p className="mb-3 font-mono text-xs font-semibold uppercase tracking-wider text-zinc-400">
+              Skill Gaps ({skillGaps.length})
+            </p>
+            <div className="flex flex-wrap gap-2">
               {skillGaps.map((gap, i) => (
                 <span
                   key={i}
-                  className={`skill-tag skill-tag--${gap.severity}`}
+                  className={`rounded-md border px-2.5 py-1 text-xs font-medium ${getSeverityBadge(gap.severity)}`}
                 >
                   {gap.skill}
                 </span>
