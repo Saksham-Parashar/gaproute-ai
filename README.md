@@ -33,7 +33,6 @@ Upload your resume, paste a target job description, describe yourself, and get a
 - [API Documentation](#api-documentation)
 - [AI Workflow](#ai-workflow)
 - [Deployment](#deployment)
-- [Project Status and Known Limitations](#project-status-and-known-limitations)
 - [Author](#author)
 
 ---
