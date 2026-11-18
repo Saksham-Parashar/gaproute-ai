@@ -1,3 +1,6 @@
+const dns = require("dns");
+dns.setDefaultResultOrder("ipv4first");
+
 const { GoogleGenAI } = require("@google/genai");
 const { z } = require("zod");
 const { zodToJsonSchema } = require("zod-to-json-schema");
