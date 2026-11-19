@@ -4,18 +4,20 @@
 
 **Turn a job description and your resume into a personalized interview strategy.**
 
-Upload your resume, paste a target job description, describe yourself, and get an AI-generated match score, skill gaps, interview questions with model answers, a day-wise preparation plan, and a tailored resume PDF.
+Upload your resume, paste a target job description, describe yourself, and get an AI-generated match score, skill gaps, interview questions with suggested answers, a day-wise preparation plan, and a tailored resume PDF.
 
 ![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=white)
 ![Vite](https://img.shields.io/badge/Vite-7-646CFF?logo=vite&logoColor=white)
+![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-4-06B6D4?logo=tailwindcss&logoColor=white)
 ![Node.js](https://img.shields.io/badge/Node.js-Express_5-339933?logo=nodedotjs&logoColor=white)
 ![MongoDB](https://img.shields.io/badge/MongoDB-Mongoose_9-47A248?logo=mongodb&logoColor=white)
 ![Gemini](https://img.shields.io/badge/AI-Google_Gemini-4285F4?logo=googlegemini&logoColor=white)
 ![JWT](https://img.shields.io/badge/Auth-JWT-000000?logo=jsonwebtokens&logoColor=white)
 ![Puppeteer](https://img.shields.io/badge/PDF-Puppeteer-40B5A4?logo=puppeteer&logoColor=white)
 ![Vercel](https://img.shields.io/badge/Frontend-Vercel-000000?logo=vercel&logoColor=white)
+![Render](https://img.shields.io/badge/Backend-Render-46E3B7?logo=render&logoColor=white)
 
-[**Live Demo**](https://gaproute-ai-frontend.vercel.app/) · [**GitHub Repository**](https://github.com/Saksham-Parashar/gaproute-ai)
+[**Live Demo**](https://gaproute-ai-frontend.vercel.app) · [**GitHub Repository**](https://github.com/Saksham-Parashar/gaproute-ai)
 
 </div>
 
@@ -58,15 +60,15 @@ GapRoute AI is a full-stack MERN application that helps job seekers prepare for 
 | --- | --- | --- |
 | User authentication | Register, login, logout, and current-user lookup using JWT (httpOnly cookie, with Bearer-token fallback). Logged-out tokens are blacklisted server-side. | Implemented |
 | Protected routes | Home and report pages redirect unauthenticated users to `/login`. | Implemented |
-| Resume analysis | Upload a text-based PDF (max 3 MB). The server extracts the text and sends it to the AI. | Implemented |
+| Resume analysis | Upload a text-based PDF (max 3 MB). The server extracts the text and sends it to the AI. The client also checks file type and size before uploading. | Implemented |
 | Job description analysis | The job description (required) is analyzed against the candidate profile. | Implemented |
 | Self-description analysis | A required free-text description of experience, skills, and goals is included in the analysis. | Implemented |
-| Match score | AI-generated score from 0 to 100, clamped and rounded by the server. | Implemented |
+| Match score | AI-generated score from 0 to 100, clamped and rounded by the server. The report page shows it as a score ring with a short verdict. | Implemented |
 | Skill gap identification | A list of missing skills, each rated `low`, `medium`, or `high` severity. | Implemented |
 | Interview questions | Technical and behavioral questions, each with the interviewer's intention and a suggested answer approach. | Implemented |
 | Preparation roadmap | A day-wise plan with a focus area and tasks per day. | Implemented |
 | Tailored resume PDF | AI generates resume HTML, which Puppeteer renders to an A4 PDF for download. | Implemented |
-| Saved reports | Every report is stored in MongoDB and scoped to the logged-in user. | Implemented |
+| Saved reports | Every report is stored in MongoDB and scoped to the logged-in user. The home page lists your recent interview plans (title and match score) so you can reopen any of them. | Implemented |
 | Model fallback | If a Gemini model is unavailable or rate-limited, the server tries the next model in a fallback list. | Implemented |
 
 ---
@@ -75,13 +77,13 @@ GapRoute AI is a full-stack MERN application that helps job seekers prepare for 
 
 | Layer | Technologies |
 | --- | --- |
-| **Frontend** | React 19, Vite 7, React Router 7, Axios, Sass (SCSS), ESLint |
+| **Frontend** | React 19, Vite 7, React Router 7, Axios, Tailwind CSS 4 (via `@tailwindcss/vite`), ESLint |
 | **Backend** | Node.js, Express 5, Multer (file upload), cookie-parser, CORS, dotenv |
 | **Database** | MongoDB with Mongoose 9 |
 | **AI integration** | Google Gemini via `@google/genai`, structured JSON output using Zod schemas (`zod`, `zod-to-json-schema`) |
 | **PDF handling** | `pdf-parse` (read uploaded resumes), Puppeteer (generate resume PDFs) |
 | **Authentication** | JSON Web Tokens (`jsonwebtoken`), password hashing with `bcryptjs`, token blacklist collection |
-| **Deployment / services** | Frontend on Vercel (SPA rewrite in `vercel.json`), MongoDB database, Google Gemini API |
+| **Deployment / services** | Frontend on Vercel (SPA rewrite in `vercel.json`), backend on Render, MongoDB database, Google Gemini API |
 
 ---
 
@@ -118,6 +120,7 @@ flowchart LR
 
 ```text
 gaproute-ai/
+├── README.md
 ├── Backend/
 │   ├── server.js                      # Entry point: loads env, connects to DB, listens on port 3000
 │   ├── .puppeteerrc.cjs               # Puppeteer cache directory config
@@ -143,16 +146,31 @@ gaproute-ai/
 │           └── ai.service.js          # Gemini calls, schemas, model fallback, Puppeteer PDF
 └── Frontend/
     ├── index.html
-    ├── vite.config.js
+    ├── vite.config.js                 # React + Tailwind CSS (@tailwindcss/vite) plugins
     ├── vercel.json                    # SPA rewrite to index.html
+    ├── eslint.config.js
     ├── package.json
+    ├── public/
+    │   └── favicon.svg
     └── src/
-        ├── main.jsx / App.jsx         # App bootstrap and context providers
+        ├── main.jsx                   # App bootstrap, imports index.css
+        ├── App.jsx                    # Context providers + router
         ├── app.routes.jsx             # Route definitions
-        ├── style.scss, style/         # Global styles
+        ├── index.css                  # Tailwind CSS import and global styles
+        ├── components/
+        │   └── Navbar.jsx             # Top bar: brand, new analysis, logout
         └── features/
-            ├── auth/                  # Login, Register, Protected route, auth context/hooks/API
-            └── interview/             # Home (create plan), Interview (report view), context/hooks/API
+            ├── auth/
+            │   ├── auth.context.jsx
+            │   ├── components/        # Protected route wrapper
+            │   ├── hooks/             # useAuth
+            │   ├── pages/             # Login, Register
+            │   └── services/          # auth.api.js (Axios calls)
+            └── interview/
+                ├── interview.context.jsx
+                ├── hooks/             # useInterview
+                ├── pages/             # Home (create plan, recent plans), Interview (report view)
+                └── services/          # interview.api.js (Axios calls)
 ```
 
 ---
@@ -207,6 +225,7 @@ Optionally create `Frontend/.env` (see below). The app runs at **http://localhos
 1. Open http://localhost:5173 and register a new account at `/register`.
 2. On the home page, paste a job description, upload a resume PDF, and write a short self-description.
 3. Click **Generate My Interview Strategy** and wait for the report page.
+4. On the report page, browse the technical questions, behavioral questions, and preparation roadmap, or click **Download Tailored Resume** to get the PDF.
 
 ### Other frontend scripts
 
@@ -259,11 +278,11 @@ Base path: `/api`. Protected routes require the JWT, sent either as the `token` 
 | Method | Route | Auth | Description |
 | --- | --- | --- | --- |
 | `POST` | `/api/interview/` | Required | Generate a report. `multipart/form-data` with `resume` (PDF, max 3 MB), `jobDescription`, `selfDescription`. Returns `201` with `interviewReport`. |
-| `GET` | `/api/interview/` | Required | List the user's reports, newest first. Returns a summary only (title, match score, timestamps), without questions, gaps, plan, or source text. |
+| `GET` | `/api/interview/` | Required | List the user's reports, newest first. Returns a summary only (`_id`, title, match score, timestamps), without questions, gaps, plan, or source text. |
 | `GET` | `/api/interview/report/:interviewId` | Required | Get one full report belonging to the user. |
 | `POST` | `/api/interview/resume/pdf/:interviewReportId` | Required | Generate and download a tailored resume PDF (`application/pdf`) for a report. |
 
-**Validation and errors:** missing or non-PDF resume, empty job or self description, a PDF with no extractable text, and files over 3 MB return `400`. Missing or invalid tokens return `401`. A report that doesn't exist (or isn't yours) returns `404`.
+**Validation and errors:** missing or non-PDF resume, empty job or self description, a PDF with no extractable text, an invalid report ID, and files over 3 MB return `400`. Missing or invalid tokens return `401`. A report that doesn't exist (or isn't yours) returns `404`.
 
 ---
 
@@ -295,14 +314,14 @@ sequenceDiagram
 **2. Model integration**
 - Calls Google Gemini through `@google/genai` with `responseMimeType: "application/json"` and a response schema generated from a Zod schema.
 - The schema defines `matchScore`, `technicalQuestions`, `behavioralQuestions`, `skillGaps`, `preparationPlan`, and `title`.
-- **Model fallback:** the server tries each model in `MODEL_CHAIN` in order, moving on when a model returns retryable errors (such as 503, 429, or model-not-found). Other errors stop the chain and return a readable message.
+- **Model fallback:** the server tries each model in `MODEL_CHAIN` in order (the `GEMINI_MODEL` override first, if set), moving on when a model returns retryable errors (such as 500, 502, 503, 429, or model-not-found). Other errors stop the chain and return a readable message.
 
 **3. Output generation**
 - The JSON response is parsed (stripping code fences if present) and normalized: score clamped to 0–100, severities restricted to `low` / `medium` / `high`, and missing arrays defaulted to empty.
 - The report is saved to MongoDB together with the extracted resume text and both descriptions, linked to the user.
 
 **4. Tailored resume PDF**
-- A second Gemini call returns a single `html` field containing an A4 resume tailored to the job description.
+- A second Gemini call returns a single `html` field containing an A4 resume (1-2 pages) tailored to the job description.
 - Puppeteer renders that HTML to a PDF, which is streamed back as a file download. The PDF is generated on request and is not stored.
 
 ---
@@ -312,19 +331,22 @@ sequenceDiagram
 | Part | Status |
 | --- | --- |
 | **Frontend** | Deployed on Vercel at [gaproute-ai-frontend.vercel.app](https://gaproute-ai-frontend.vercel.app/). `Frontend/vercel.json` rewrites all routes to `index.html` so client-side routing works on refresh. |
-| **Backend** | A standalone Node.js server (`npm start`). The repository contains no host-specific config (no Dockerfile, Procfile, or `vercel.json` in `Backend/`). |
+| **Backend** | Deployed on [Render](https://render.com/) as a Node.js web service (the `Backend/` folder, started with `npm start`). |
 | **Database** | Any reachable MongoDB instance via `MONGO_URI`. |
 
 **Configuration needed for a deployed setup**
 
-1. **Backend:** set `MONGO_URI`, `JWT_SECRET`, `GOOGLE_GENAI_API_KEY`, `NODE_ENV=production`, and `CLIENT_URL` to the deployed frontend URL (for CORS).
-2. **Frontend:** set `VITE_API_URL` to the deployed backend URL in the Vercel project settings.
+1. **Backend (Render):** add `MONGO_URI`, `JWT_SECRET`, `GOOGLE_GENAI_API_KEY`, `NODE_ENV=production`, and `CLIENT_URL` (the deployed frontend URL, for CORS) as environment variables in the Render dashboard.
+2. **Frontend (Vercel):** set `VITE_API_URL` to the deployed Render backend URL in the Vercel project settings.
 3. **Cross-site cookies:** with `NODE_ENV=production`, cookies are `Secure` and `SameSite=None`, so the backend must be served over HTTPS.
 4. **Puppeteer:** the backend host must be able to run headless Chrome. `postinstall` downloads Chrome into `Backend/.cache/puppeteer`, and the app launches it with `--no-sandbox`.
-5. **Port:** the server listens on a fixed port, `3000`. Hosts that assign a port through `PORT` will need a small code change (see below).
+5. **Port:** the server currently listens on a fixed port, `3000` (hardcoded in `Backend/server.js`). Hosts that assign a port through the `PORT` environment variable need a one-line change:
+
+   ```js
+   app.listen(process.env.PORT || 3000, () => { /* ... */ });
+   ```
 
 ---
-
 
 ## Author
 
